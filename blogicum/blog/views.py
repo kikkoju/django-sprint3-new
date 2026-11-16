@@ -1,13 +1,12 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
+from .constants import POST_ON_MAIN_PAGE
 from .models import Post, Category
 
-POST_ON_MAIN_PAGE = 5
 
-
-def published_posts():
-    return Post.objects.filter(
+def published_posts(objects):
+    return objects.filter(
         pub_date__lte=timezone.now(),
         is_published=True,
         category__is_published=True,
@@ -16,18 +15,18 @@ def published_posts():
 
 def index(request):
     template = 'blog/index.html',
-    post_list = published_posts()[:POST_ON_MAIN_PAGE]
+    post_list = published_posts(Post.objects)[:POST_ON_MAIN_PAGE]
     context = {
         'post_list': post_list
     }
     return render(request, template, context)
 
 
-def post_detail(request, id):
+def post_detail(request, post_id):
     template = 'blog/detail.html'
     post = get_object_or_404(
-        published_posts(),
-        id=id
+        published_posts(Post.objects),
+        id=post_id
     )
     context = {
         'post': post
@@ -44,9 +43,7 @@ def category_posts(request, category_slug):
         is_published=True,
     )
 
-    post_list = published_posts().filter(
-        category=category
-    )
+    post_list = published_posts(category.posts)
 
     context = {
         'category': category,
